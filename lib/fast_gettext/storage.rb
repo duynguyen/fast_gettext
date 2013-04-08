@@ -114,6 +114,7 @@ module FastGettext
 
     def expire_cache_for(key)
       current_cache.delete(key)
+      Rails.cache.write(:fast_gettext_current_cache, current_cache)
     end
 
     def locale
