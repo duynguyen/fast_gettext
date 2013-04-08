@@ -13,19 +13,19 @@ module FastGettext
     [:available_locales, :_locale, :text_domain, :pluralisation_rule].each do |method_name|
       key = "fast_gettext_#{method_name}".to_sym
       define_method "#{method_name}=" do |value|
-        Thread.current[key]=value
+        Rails.cache.write(key, value)
         update_current_cache
       end
     end
 
     def _locale
-      Thread.current[:fast_gettext__locale]
+      Rails.cache.read(:fast_gettext__locale)
     end
     private :_locale, :_locale=
 
 
     def available_locales
-      locales = Thread.current[:fast_gettext_available_locales] || default_available_locales
+      locales = Rails.cache.read(:fast_gettext_available_locales) || default_available_locales
       return unless locales
       locales.map{|s|s.to_s}
     end
@@ -43,7 +43,7 @@ module FastGettext
 
 
     def text_domain
-      Thread.current[:fast_gettext_text_domain] || default_text_domain
+      Rails.cache.read(:fast_gettext_text_domain) || default_text_domain
     end
 
     # == cattr_accessor :default_text_domain
@@ -61,15 +61,15 @@ module FastGettext
     # if overwritten by user( FastGettext.pluralisation_rule = xxx) use it,
     # otherwise fall back to repo or to default lambda
     def pluralisation_rule
-      Thread.current[:fast_gettext_pluralisation_rule] ||  current_repository.pluralisation_rule || lambda{|i| i!=1}
+      Rails.cache.read(:fast_gettext_pluralisation_rule) ||  current_repository.pluralisation_rule || lambda{|i| i!=1}
     end
 
     def current_cache
-      Thread.current[:fast_gettext_current_cache] || {}
+      Rails.cache.read(:fast_gettext_current_cache) || {}
     end
 
     def current_cache=(cache)
-      Thread.current[:fast_gettext_current_cache] = cache
+      Rails.cache.write(:fast_gettext_current_cache, cache)
     end
 
     #global, since re-parsing whole folders takes too much time...
